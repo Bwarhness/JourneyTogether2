@@ -1,98 +1,232 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useJourneyStore } from '../src/stores/journeyStore';
+import { useAuthStore } from '../src/stores/authStore';
+import { JourneyCard } from '../src/components/JourneyCard';
+import type { Journey } from '../src/types/journey';
+import { Colors } from '@/constants/theme';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+type TabType = 'nearby' | 'my-journeys';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabType>('nearby');
+  const [refreshing, setRefreshing] = useState(false);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const { nearbyJourneys, journeys, loading, error, fetchNearbyJourneys, fetchUserJourneys } =
+    useJourneyStore();
+  const { user } = useAuthStore();
+
+  // Mock location - in production this would come from expo-location
+  const mockLocation = { lat: 55.6761, lng: 12.5683 }; // Copenhagen
+
+  useEffect(() => {
+    if (activeTab === 'nearby') {
+      fetchNearbyJourneys(mockLocation.lat, mockLocation.lng);
+    } else if (activeTab === 'my-journeys' && user?.id) {
+      fetchUserJourneys(user.id);
+    }
+  }, [activeTab, user?.id]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      if (activeTab === 'nearby') {
+        await fetchNearbyJourneys(mockLocation.lat, mockLocation.lng);
+      } else if (activeTab === 'my-journeys' && user?.id) {
+        await fetchUserJourneys(user.id);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, [activeTab, user?.id]);
+
+  const handleJourneyPress = (journeyId: string) => {
+    router.push(`/journey/${journeyId}`);
+  };
+
+  const renderJourneyItem = ({ item }: { item: Journey }) => (
+    <JourneyCard journey={item} onPress={handleJourneyPress} />
+  );
+
+  const renderEmptyState = (message: string) => (
+    <View style={styles.emptyState}>
+      <Ionicons name="map-outline" size={64} color="#ccc" />
+      <Text style={styles.emptyText}>{message}</Text>
+    </View>
+  );
+
+  const renderErrorState = () => (
+    <View style={styles.errorState}>
+      <Ionicons name="warning-outline" size={48} color="#E07A5F" />
+      <Text style={styles.errorText}>{error || 'Something went wrong'}</Text>
+      <TouchableOpacity style={styles.retryButton} onPress={onRefresh}>
+        <Text style={styles.retryButtonText}>Retry</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const nearbyData = activeTab === 'nearby' ? nearbyJourneys : journeys;
+  const emptyMessage =
+    activeTab === 'nearby'
+      ? 'No journeys nearby.\nBe the first to explore!'
+      : 'You haven\'t created any journeys yet.\nStart your adventure!';
+
+  return (
+    <View style={styles.container}>
+      {/* Tab Header */}
+      <View style={styles.tabHeader}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'nearby' && styles.tabActive]}
+          onPress={() => setActiveTab('nearby')}
+        >
+          <Ionicons
+            name="location"
+            size={18}
+            color={activeTab === 'nearby' ? Colors.light.tint : '#999'}
+          />
+          <Text style={[styles.tabText, activeTab === 'nearby' && styles.tabTextActive]}>
+            Nearby
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'my-journeys' && styles.tabActive]}
+          onPress={() => setActiveTab('my-journeys')}
+        >
+          <Ionicons
+            name="person"
+            size={18}
+            color={activeTab === 'my-journeys' ? Colors.light.tint : '#999'}
+          />
+          <Text style={[styles.tabText, activeTab === 'my-journeys' && styles.tabTextActive]}>
+            My Journeys
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Content */}
+      {loading && !refreshing ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.light.tint} />
+          <Text style={styles.loadingText}>Loading journeys...</Text>
+        </View>
+      ) : error ? (
+        renderErrorState()
+      ) : (
+        <FlatList
+          data={nearbyData}
+          keyExtractor={(item) => item.id}
+          renderItem={renderJourneyItem}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={Colors.light.tint}
+            />
+          }
+          ListEmptyComponent={renderEmptyState(emptyMessage)}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAF8',
+  },
+  tabHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE',
+    paddingHorizontal: 16,
+  },
+  tab: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 14,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  tabActive: {
+    borderBottomColor: Colors.light.tint,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  tabText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#999',
+  },
+  tabTextActive: {
+    color: Colors.light.tint,
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 32,
+    flexGrow: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#999',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 80,
+    gap: 16,
+  },
+  emptyText: {
+    fontSize: 15,
+    color: '#999',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  errorState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 80,
+    gap: 12,
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: Colors.light.tint,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
