@@ -55,9 +55,10 @@ function StopItem({ stop, index }: { stop: Stop; index: number }) {
 export default function JourneyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { currentJourney, loading, error, fetchJourneyDetail, clearCurrentJourney } =
+  const { currentJourney, loading, error, fetchJourneyDetail, clearCurrentJourney, forkJourney } =
     useJourneyStore();
   const [starting, setStarting] = useState(false);
+  const [forking, setForking] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -86,6 +87,31 @@ export default function JourneyDetailScreen() {
       Alert.alert('Error', message);
     } finally {
       setStarting(false);
+    }
+  };
+
+  const handleFork = async () => {
+    if (!currentJourney) return;
+
+    setForking(true);
+    try {
+      const forked = await forkJourney(currentJourney.id);
+      if (forked) {
+        Alert.alert(
+          'Journey Forked!',
+          `"${forked.title}" is now in your journeys.`,
+          [
+            { text: 'View', onPress: () => router.push(`/journey/${forked.id}`) },
+            { text: 'Stay Here', style: 'cancel' },
+          ]
+        );
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to fork journey. Please try again.';
+      Alert.alert('Error', message);
+    } finally {
+      setForking(false);
     }
   };
 
@@ -202,6 +228,7 @@ export default function JourneyDetailScreen() {
           style={[styles.startButton, starting && styles.startButtonDisabled]}
           onPress={handleStartSoloJourney}
           disabled={starting}
+          data-testid="start-journey-button"
         >
           {starting ? (
             <ActivityIndicator size="small" color="#fff" />
@@ -209,6 +236,21 @@ export default function JourneyDetailScreen() {
             <>
               <Ionicons name="play" size={20} color="#fff" />
               <Text style={styles.startButtonText}>Start Solo Journey</Text>
+            </>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.forkButton, forking && styles.forkButtonDisabled]}
+          onPress={handleFork}
+          disabled={forking}
+          data-testid="fork-journey-button"
+        >
+          {forking ? (
+            <ActivityIndicator size="small" color={Colors.light.tint} />
+          ) : (
+            <>
+              <Ionicons name="git-branch-outline" size={18} color={Colors.light.tint} />
+              <Text style={styles.forkButtonText}>Fork Journey</Text>
             </>
           )}
         </TouchableOpacity>
@@ -459,6 +501,26 @@ const styles = StyleSheet.create({
   startButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '700',
+  },
+  forkButton: {
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.light.tint,
+    marginTop: 8,
+  },
+  forkButtonDisabled: {
+    opacity: 0.6,
+  },
+  forkButtonText: {
+    color: Colors.light.tint,
+    fontSize: 15,
     fontWeight: '700',
   },
 });

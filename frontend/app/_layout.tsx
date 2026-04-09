@@ -112,6 +112,13 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
+          name="journey/create"
+          options={{
+            title: 'Create Journey',
+            headerBackTitle: 'Back',
+          }}
+        />
+        <Stack.Screen
           name="home"
           options={{
             title: 'Home',

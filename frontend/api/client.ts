@@ -146,6 +146,49 @@ class ApiClient {
     return response.data;
   }
 
+  // Journey CRUD (Sprint 5: Journey Creation)
+  async createJourney(input: {
+    title: string;
+    description?: string;
+    cover_image_url?: string;
+    tags?: string[];
+    duration_label?: string;
+    is_public?: boolean;
+    stops?: Array<{
+      title: string;
+      description?: string;
+      location: { lat: number; lng: number; label: string };
+      estimated_time?: number;
+      tips?: string[];
+      photo_requirement?: boolean;
+    }>;
+  }) {
+    const response = await this.client.post('/journeys', input);
+    return response.data;
+  }
+
+  async updateJourney(journeyId: string, input: {
+    title?: string;
+    description?: string;
+    cover_image_url?: string;
+    tags?: string[];
+    duration_label?: string;
+    is_public?: boolean;
+  }) {
+    const response = await this.client.put(`/journeys/${journeyId}`, input);
+    return response.data;
+  }
+
+  async deleteJourney(journeyId: string) {
+    const response = await this.client.delete(`/journeys/${journeyId}`);
+    return response.data;
+  }
+
+  async forkJourney(journeyId: string) {
+    const response = await this.client.post(`/journeys/${journeyId}/fork`);
+    return response.data;
+  }
+
   // Generic request methods
   async get<T>(url: string, config?: InternalAxiosRequestConfig) {
     const response = await this.client.get<T>(url, config);

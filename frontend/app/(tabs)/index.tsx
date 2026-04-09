@@ -124,21 +124,36 @@ export default function HomeScreen() {
       ) : error ? (
         renderErrorState()
       ) : (
-        <FlatList
-          data={nearbyData}
-          keyExtractor={(item) => item.id}
-          renderItem={renderJourneyItem}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={Colors.light.tint}
-            />
-          }
-          ListEmptyComponent={renderEmptyState(emptyMessage)}
-          showsVerticalScrollIndicator={false}
-        />
+        <View style={styles.listWrapper}>
+          <FlatList
+            data={nearbyData}
+            keyExtractor={(item) => item.id}
+            renderItem={renderJourneyItem}
+            contentContainerStyle={[
+              styles.listContent,
+              nearbyData.length === 0 && styles.listContentEmpty,
+            ]}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={Colors.light.tint}
+              />
+            }
+            ListEmptyComponent={renderEmptyState(emptyMessage)}
+            showsVerticalScrollIndicator={false}
+          />
+          {/* FAB — only shown on My Journeys tab */}
+          {activeTab === 'my-journeys' && (
+            <TouchableOpacity
+              style={styles.fab}
+              onPress={() => router.push('/journey/create')}
+              data-testid="create-journey-fab"
+            >
+              <Ionicons name="add" size={26} color="#fff" />
+            </TouchableOpacity>
+          )}
+        </View>
       )}
     </View>
   );
@@ -177,9 +192,15 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: Colors.light.tint,
   },
+  listWrapper: {
+    flex: 1,
+  },
   listContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 80,
+    flexGrow: 1,
+  },
+  listContentEmpty: {
     flexGrow: 1,
   },
   loadingContainer: {
@@ -228,5 +249,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 14,
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: Colors.light.tint,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
