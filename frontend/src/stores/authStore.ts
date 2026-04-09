@@ -22,6 +22,7 @@ interface AuthState {
   register: (email: string, username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   loadToken: () => Promise<void>;
+  updateProfile: (data: { display_name?: string; username?: string }) => Promise<void>;
   clearError: () => void;
 }
 
@@ -110,6 +111,25 @@ export const useAuthStore = create<AuthState>()(
           // Token invalid or expired
           await AsyncStorage.removeItem(TOKEN_KEY);
           set({ token: null, user: null, isLoading: false, isInitialized: true });
+        }
+      },
+
+      updateProfile: async (data: { display_name?: string; username?: string }) => {
+        set({ isLoading: true, error: null });
+        try {
+          const updatedUser = await apiClient.put<User>('/auth/me', data);
+          set((state) => ({
+            user: state.user ? { ...state.user, ...updatedUser } : updatedUser,
+            isLoading: false,
+          }));
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+              || 'Profile update failed';
+          set({ isLoading: false, error: errorMessage });
+          throw error;
         }
       },
 

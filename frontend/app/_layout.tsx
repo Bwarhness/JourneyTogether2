@@ -1,7 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import 'react-native-reanimated';
 import { useEffect } from 'react';
 
@@ -15,26 +14,6 @@ export const unstable_settings = {
 
 // Protected route names that require authentication
 const PROTECTED_ROUTES = ['(tabs)', 'home'];
-
-function LogoutButton() {
-  const { logout } = useAuthStore();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/auth/login');
-  };
-
-  return (
-    <TouchableOpacity
-      onPress={handleLogout}
-      data-testid="logout-button"
-      style={styles.logoutButton}
-    >
-      <Text style={styles.logoutText}>Logout</Text>
-    </TouchableOpacity>
-  );
-}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -128,7 +107,6 @@ export default function RootLayout() {
           name="home"
           options={{
             title: 'Home',
-            headerRight: () => user ? <LogoutButton /> : null,
           }}
         />
       </Stack>
@@ -136,16 +114,3 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  logoutButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-  },
-  logoutText: {
-    color: Colors.dark.tint,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
