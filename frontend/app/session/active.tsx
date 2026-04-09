@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +14,7 @@ import { useSessionStore } from '@/stores/sessionStore';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { StopCard } from '@/components/StopCard';
 import { CheckInButton } from '@/components/CheckInButton';
+import { VoiceRecorderButton } from '@/components/VoiceRecorderButton';
 import type { SessionStop } from '@/types/journey';
 import { Colors } from '@/constants/theme';
 
@@ -38,6 +40,8 @@ export default function ActiveJourneyScreen() {
 
   const [checkingIn, setCheckingIn] = useState(false);
   const [ending, setEnding] = useState(false);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [voiceNoteStopId, setVoiceNoteStopId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchActiveSession();
@@ -109,6 +113,22 @@ export default function ActiveJourneyScreen() {
     }
   };
 
+  const handleVoiceNotePress = (stopId: string) => {
+    setVoiceNoteStopId(stopId);
+    setShowVoiceRecorder(true);
+  };
+
+  const handleVoiceNoteComplete = async (uri: string) => {
+    if (!uri || !voiceNoteStopId || !activeSession) return;
+    try {
+      await useSessionStore.getState().attachVoiceNote(activeSession.id, voiceNoteStopId, uri);
+      setShowVoiceRecorder(false);
+      setVoiceNoteStopId(null);
+    } catch {
+      // Error handled in store
+    }
+  };
+
   const handleEndEarly = () => {
     Alert.alert(
       'End Journey Early?',
@@ -152,9 +172,34 @@ export default function ActiveJourneyScreen() {
               stop={stop}
               isActive={isActive}
               isCompleted={isCompleted}
+              onVoiceNotePress={() => handleVoiceNotePress(stop.id)}
+              hasVoiceNote={!!stop.voice_note_url}
             />
           );
         })}
+
+        {/* Voice Recorder Panel */}
+        {showVoiceRecorder && voiceNoteStopId && (
+          <View style={styles.voiceRecorderPanel}>
+            <View style={styles.voiceRecorderHeader}>
+              <Ionicons name="mic" size={16} color={Colors.light.tint} />
+              <Text style={styles.voiceRecorderTitle}>Voice Note</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowVoiceRecorder(false);
+                  setVoiceNoteStopId(null);
+                }}
+                testID="voice-recorder-close"
+              >
+                <Ionicons name="close" size={18} color="#999" />
+              </TouchableOpacity>
+            </View>
+            <VoiceRecorderButton
+              onRecordingComplete={handleVoiceNoteComplete}
+              testID="voice-recorder-btn"
+            />
+          </View>
+        )}
       </ScrollView>
 
       {/* Bottom CTA */}
@@ -268,5 +313,25 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#eee',
     gap: 12,
+  },
+  voiceRecorderPanel: {
+    marginTop: 8,
+    padding: 12,
+    backgroundColor: Colors.light.tint + '08',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.light.tint + '20',
+  },
+  voiceRecorderHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+  },
+  voiceRecorderTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.tint,
+    flex: 1,
   },
 });

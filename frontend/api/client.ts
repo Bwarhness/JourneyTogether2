@@ -230,6 +230,21 @@ class ApiClient {
     return response.data;
   }
 
+  // Voice note upload (Sprint 7)
+  async uploadVoiceNote(sessionId: string, uri: string, stopId: string): Promise<{ voice_note_url: string }> {
+    const formData = new FormData();
+    formData.append('voice_note', {
+      uri,
+      name: 'voice_note.m4a',
+      type: 'audio/mp4',
+    } as unknown as Blob);
+    formData.append('stop_id', stopId);
+    const response = await this.client.post(`/sessions/${sessionId}/voice-notes`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
+
   // Generic request methods
   async get<T>(url: string, config?: InternalAxiosRequestConfig) {
     const response = await this.client.get<T>(url, config);

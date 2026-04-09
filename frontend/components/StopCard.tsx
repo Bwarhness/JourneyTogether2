@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { SessionStop } from '@/types/journey';
 import { Colors } from '@/constants/theme';
@@ -8,9 +8,11 @@ interface StopCardProps {
   stop: SessionStop;
   isActive: boolean;
   isCompleted: boolean;
+  onVoiceNotePress?: () => void;
+  hasVoiceNote?: boolean;
 }
 
-export function StopCard({ stop, isActive, isCompleted }: StopCardProps) {
+export function StopCard({ stop, isActive, isCompleted, onVoiceNotePress, hasVoiceNote }: StopCardProps) {
   const statusIcon = isCompleted ? (
     <Ionicons name="checkmark-circle" size={24} color={Colors.light.tint} />
   ) : isActive ? (
@@ -58,12 +60,36 @@ export function StopCard({ stop, isActive, isCompleted }: StopCardProps) {
           </View>
         )}
 
+        {isActive && (
+          <TouchableOpacity
+            style={styles.voiceNoteButton}
+            onPress={onVoiceNotePress}
+            testID={`voice-note-btn-${stop.id}`}
+          >
+            <Ionicons
+              name={hasVoiceNote ? 'mic' : 'mic-outline'}
+              size={14}
+              color={hasVoiceNote ? Colors.light.tint : '#999'}
+            />
+            <Text style={[styles.voiceNoteText, hasVoiceNote && styles.voiceNoteTextActive]}>
+              {hasVoiceNote ? 'Voice note added' : 'Record voice note'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {isCompleted && stop.checked_in_at && (
           <View style={styles.checkedInRow}>
             <Ionicons name="checkmark" size={10} color={Colors.light.tint} />
             <Text style={styles.checkedInText}>
               Checked in at {new Date(stop.checked_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </Text>
+          </View>
+        )}
+
+        {(isCompleted || isActive) && stop.voice_note_url && (
+          <View style={styles.voiceNoteIndicator}>
+            <Ionicons name="mic" size={12} color={Colors.light.tint} />
+            <Text style={styles.voiceNoteIndicatorText}>Voice note</Text>
           </View>
         )}
       </View>
@@ -174,6 +200,34 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   checkedInText: {
+    fontSize: 11,
+    color: Colors.light.tint,
+  },
+  voiceNoteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: Colors.light.tint + '10',
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  voiceNoteText: {
+    fontSize: 12,
+    color: '#999',
+  },
+  voiceNoteTextActive: {
+    color: Colors.light.tint,
+  },
+  voiceNoteIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  voiceNoteIndicatorText: {
     fontSize: 11,
     color: Colors.light.tint,
   },

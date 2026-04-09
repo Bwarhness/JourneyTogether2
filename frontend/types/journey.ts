@@ -56,6 +56,7 @@ export interface SessionStop {
   estimated_time: number;
   tips: string[];
   checked_in_at: string | null; // ISO timestamp when checked in, null if not yet
+  voice_note_url?: string | null; // Sprint 7: voice notes
 }
 
 export interface Session {
