@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+*/
+
+# Build outputs
+dist/
+build/
+*.apk
+*.aab
+*.ipa
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+coverage/
+
+# Docker
+.docker/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# React Native / Expo
+.expo/
+android/app/build/
+ios/build/
+ios/Pods/
+
+# Turbo / monorepo
+.turbo/
+
+# Binary files (store large assets in Git LFS instead)
+# *.jpg
+# *.png
+# *.mp4
