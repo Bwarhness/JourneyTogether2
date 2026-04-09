@@ -5,8 +5,10 @@ import type { Journey } from '../types/journey';
 interface JourneyState {
   journeys: Journey[];
   nearbyJourneys: Journey[];
+  exploredJourneys: Journey[];
   currentJourney: Journey | null;
   loading: boolean;
+  searchLoading: boolean;
   error: string | null;
   creating: boolean;
   createError: string | null;
@@ -15,6 +17,8 @@ interface JourneyState {
   fetchNearbyJourneys: (lat: number, lng: number) => Promise<void>;
   fetchUserJourneys: (userId: string) => Promise<void>;
   fetchJourneyDetail: (journeyId: string) => Promise<void>;
+  searchJourneys: (query: string) => Promise<void>;
+  fetchPublicJourneys: () => Promise<void>;
   createJourney: (input: {
     title: string;
     description?: string;
@@ -49,8 +53,10 @@ interface JourneyState {
 export const useJourneyStore = create<JourneyState>((set) => ({
   journeys: [],
   nearbyJourneys: [],
+  exploredJourneys: [],
   currentJourney: null,
   loading: false,
+  searchLoading: false,
   error: null,
   creating: false,
   createError: null,
@@ -176,6 +182,38 @@ export const useJourneyStore = create<JourneyState>((set) => ({
           : (error as { response?: { data?: { message?: string } } })?.response?.data?.message
           || 'Failed to delete journey';
       set({ loading: false, error: message });
+    }
+  },
+
+  searchJourneys: async (query: string) => {
+    set({ searchLoading: true, error: null });
+    try {
+      const data = await apiClient.getJourneys({ q: query });
+      const journeys: Journey[] = Array.isArray(data) ? data : data?.journeys ?? [];
+      set({ exploredJourneys: journeys, searchLoading: false });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+          || 'Failed to search journeys';
+      set({ searchLoading: false, error: message });
+    }
+  },
+
+  fetchPublicJourneys: async () => {
+    set({ searchLoading: true, error: null });
+    try {
+      const data = await apiClient.getJourneys({ radius_km: 50 });
+      const journeys: Journey[] = Array.isArray(data) ? data : data?.journeys ?? [];
+      set({ exploredJourneys: journeys, searchLoading: false });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+          || 'Failed to fetch public journeys';
+      set({ searchLoading: false, error: message });
     }
   },
 
