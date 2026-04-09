@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useJourneyStore } from '@/stores/journeyStore';
+import { useAuthStore } from '@/stores/authStore';
 import { apiClient } from '@/api/client';
 import type { Stop, Reaction, ReactionEmoji } from '@/types/journey';
 import { Colors } from '@/constants/theme';
@@ -56,10 +57,12 @@ function StopItem({ stop, index }: { stop: Stop; index: number }) {
 export default function JourneyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { currentJourney, loading, error, fetchJourneyDetail, clearCurrentJourney, forkJourney } =
+  const { currentJourney, loading, error, fetchJourneyDetail, clearCurrentJourney, forkJourney, deleteJourney } =
     useJourneyStore();
+  const { user } = useAuthStore();
   const [starting, setStarting] = useState(false);
   const [forking, setForking] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [reactionsLoading, setReactionsLoading] = useState(false);
 
@@ -144,6 +147,36 @@ export default function JourneyDetailScreen() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!currentJourney) return;
+
+    Alert.alert(
+      'Delete Journey',
+      `Are you sure you want to delete "${currentJourney.title}"? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await deleteJourney(currentJourney.id);
+              router.replace('/(tabs)');
+            } catch (err) {
+              const message =
+                err instanceof Error ? err.message : 'Failed to delete journey. Please try again.';
+              Alert.alert('Error', message);
+              setDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const isOwner = user && currentJourney && currentJourney.created_by === user.id;
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -183,6 +216,27 @@ export default function JourneyDetailScreen() {
             </View>
           )}
           <View style={styles.heroOverlay} />
+          <View style={styles.heroTopBar}>
+            {/* Back button */}
+            <TouchableOpacity style={styles.heroBackBtn} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            {/* Delete button — owner only */}
+            {isOwner && (
+              <TouchableOpacity
+                style={styles.heroDeleteBtn}
+                onPress={handleDelete}
+                disabled={deleting}
+                data-testid="delete-journey-button"
+              >
+                {deleting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Ionicons name="trash" size={18} color="#fff" />
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
           <View style={styles.heroContent}>
             <Text style={styles.heroTitle}>{currentJourney.title}</Text>
             {/* Badges */}
@@ -230,6 +284,25 @@ export default function JourneyDetailScreen() {
           {currentJourney.description ? (
             <Text style={styles.description}>{currentJourney.description}</Text>
           ) : null}
+
+          {/* Owner actions */}
+          {isOwner && (
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={handleDelete}
+              disabled={deleting}
+              data-testid="delete-journey-button"
+            >
+              {deleting ? (
+                <ActivityIndicator size="small" color="#DC3232" />
+              ) : (
+                <>
+                  <Ionicons name="trash-outline" size={18} color="#DC3232" />
+                  <Text style={styles.deleteButtonText}>Delete Journey</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
 
           {/* Reactions */}
           <View style={styles.reactionsSection}>
@@ -335,6 +408,32 @@ const styles = StyleSheet.create({
     height: 260,
     position: 'relative',
   },
+  heroTopBar: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  heroBackBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  heroDeleteBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(220,50,50,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   heroImage: {
     width: '100%',
     height: '100%',
@@ -426,6 +525,22 @@ const styles = StyleSheet.create({
   },
   reactionsSection: {
     marginTop: 8,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#DC3232',
+    backgroundColor: '#fff',
+  },
+  deleteButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#DC3232',
   },
   stopsSection: {
     marginTop: 8,
