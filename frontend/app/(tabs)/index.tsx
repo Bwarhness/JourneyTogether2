@@ -10,10 +10,10 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useJourneyStore } from '../src/stores/journeyStore';
-import { useAuthStore } from '../src/stores/authStore';
-import { JourneyCard } from '../src/components/JourneyCard';
-import type { Journey } from '../src/types/journey';
+import { useJourneyStore } from '@/stores/journeyStore';
+import { useAuthStore } from '@/stores/authStore';
+import { JourneyCard } from '@/components/JourneyCard';
+import type { Journey } from '@/types/journey';
 import { Colors } from '@/constants/theme';
 
 type TabType = 'nearby' | 'my-journeys';

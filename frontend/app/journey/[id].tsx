@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useJourneyStore } from '../../src/stores/journeyStore';
-import { apiClient } from '../../src/api/client';
-import type { Stop } from '../../src/types/journey';
+import { useJourneyStore } from '@/stores/journeyStore';
+import { apiClient } from '@/api/client';
+import type { Stop } from '@/types/journey';
 import { Colors } from '@/constants/theme';
 
 function StopItem({ stop, index }: { stop: Stop; index: number }) {
