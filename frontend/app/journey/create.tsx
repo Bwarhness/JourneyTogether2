@@ -16,6 +16,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { StopEditor, type StopInput } from '@/components/StopEditor';
+import { CoverImagePicker } from '@/components/CoverImagePicker';
+import { apiClient } from '@/api/client';
 import { Colors } from '@/constants/theme';
 
 export default function CreateJourneyScreen() {
@@ -28,11 +30,28 @@ export default function CreateJourneyScreen() {
   const [durationLabel, setDurationLabel] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [stops, setStops] = useState<StopInput[]>([]);
+  const [coverImageUri, setCoverImageUri] = useState<string>('');
+  const [coverImageUrl, setCoverImageUrl] = useState<string>('');
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   const handleSubmit = async () => {
     if (!title.trim()) {
       Alert.alert('Title Required', 'Please enter a title for your journey.');
       return;
+    }
+
+    // Upload cover image if selected but not yet uploaded
+    let finalCoverUrl = coverImageUrl;
+    if (coverImageUri && !coverImageUrl) {
+      setUploadingCover(true);
+      try {
+        const result = await apiClient.uploadCoverImage(coverImageUri);
+        finalCoverUrl = result.url;
+      } catch {
+        Alert.alert('Cover upload failed', 'Journey will be created without a cover image.');
+      } finally {
+        setUploadingCover(false);
+      }
     }
 
     const parsedStops = stops
@@ -56,6 +75,7 @@ export default function CreateJourneyScreen() {
     const result = await createJourney({
       title: title.trim(),
       description: description.trim() || undefined,
+      cover_image_url: finalCoverUrl || undefined,
       tags: tags
         .split(',')
         .map((t) => t.trim())
@@ -106,6 +126,17 @@ export default function CreateJourneyScreen() {
             Plan your journey step by step. You can always edit it later.
           </Text>
         </View>
+
+        {/* Cover Image */}
+        <CoverImagePicker
+          value={coverImageUrl}
+          onChange={(uri) => {
+            setCoverImageUri(uri);
+            setCoverImageUrl(''); // clear uploaded URL until submitted
+          }}
+          onUpload={(url) => setCoverImageUrl(url)}
+          uploading={uploadingCover}
+        />
 
         {/* Title */}
         <View style={styles.fieldGroup}>
@@ -207,10 +238,10 @@ export default function CreateJourneyScreen() {
         <TouchableOpacity
           style={[styles.submitBtn, creating && styles.submitBtnDisabled]}
           onPress={handleSubmit}
-          disabled={creating}
+          disabled={creating || uploadingCover}
           data-testid="create-journey-submit"
         >
-          {creating ? (
+          {creating || uploadingCover ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
             <>

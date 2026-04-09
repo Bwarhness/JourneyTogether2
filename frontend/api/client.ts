@@ -189,6 +189,47 @@ class ApiClient {
     return response.data;
   }
 
+  // Image upload methods (Sprint 6: Polish + Image Upload)
+  async uploadCoverImage(uri: string): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append('cover', {
+      uri,
+      name: 'cover.jpg',
+      type: 'image/jpeg',
+    } as unknown as Blob);
+    const response = await this.client.post('/upload/cover', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
+
+  async uploadAvatar(uri: string): Promise<{ avatar_url: string }> {
+    const formData = new FormData();
+    formData.append('avatar', {
+      uri,
+      name: 'avatar.jpg',
+      type: 'image/jpeg',
+    } as unknown as Blob);
+    const response = await this.client.post('/users/me/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
+
+  async uploadSessionPhoto(sessionId: string, uri: string, stopId: string): Promise<{ photo_url: string }> {
+    const formData = new FormData();
+    formData.append('photo', {
+      uri,
+      name: 'photo.jpg',
+      type: 'image/jpeg',
+    } as unknown as Blob);
+    formData.append('stop_id', stopId);
+    const response = await this.client.post(`/sessions/${sessionId}/photos`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
+
   // Generic request methods
   async get<T>(url: string, config?: InternalAxiosRequestConfig) {
     const response = await this.client.get<T>(url, config);
