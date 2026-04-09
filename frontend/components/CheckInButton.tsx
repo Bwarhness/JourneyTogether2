@@ -8,6 +8,7 @@ interface CheckInButtonProps {
   loading?: boolean;
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'danger';
+  label?: string; // Optional override text
 }
 
 export function CheckInButton({
@@ -15,6 +16,7 @@ export function CheckInButton({
   loading = false,
   disabled = false,
   variant = 'primary',
+  label,
 }: CheckInButtonProps) {
   const isDisabled = disabled || loading;
 
@@ -27,6 +29,9 @@ export function CheckInButton({
   const textColor = variant === 'secondary' ? '#333' : '#fff';
 
   const iconName = variant === 'danger' ? 'close' : variant === 'secondary' ? 'time-outline' : 'checkmark';
+
+  const buttonLabel = label
+    ?? (variant === 'danger' ? 'End Journey Early' : variant === 'secondary' ? 'Check In Later' : 'Check In Here');
 
   return (
     <TouchableOpacity
@@ -45,7 +50,7 @@ export function CheckInButton({
         <>
           <Ionicons name={iconName as any} size={20} color={textColor} />
           <Text style={[styles.buttonText, { color: textColor }]}>
-            {variant === 'danger' ? 'End Journey Early' : variant === 'secondary' ? 'Check In Later' : 'Check In Here'}
+            {buttonLabel}
           </Text>
         </>
       )}

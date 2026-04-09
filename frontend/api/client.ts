@@ -95,6 +95,57 @@ class ApiClient {
     return response.data;
   }
 
+  // Group session endpoints (Sprint 4: Multiplayer)
+  async createGroupSession(journeyId: string) {
+    const response = await this.client.post('/group-sessions', { journey_id: journeyId });
+    return response.data;
+  }
+
+  async getGroupSession(sessionId: string) {
+    const response = await this.client.get(`/group-sessions/${sessionId}`);
+    return response.data;
+  }
+
+  async getGroupSessionByInviteCode(inviteCode: string) {
+    const response = await this.client.get(`/group-sessions/invite/${inviteCode}`);
+    return response.data;
+  }
+
+  async joinGroupSession(sessionId: string) {
+    const response = await this.client.post(`/group-sessions/${sessionId}/join`);
+    return response.data;
+  }
+
+  async leaveGroupSession(sessionId: string) {
+    const response = await this.client.delete(`/group-sessions/${sessionId}/leave`);
+    return response.data;
+  }
+
+  async kickParticipant(sessionId: string, participantId: string) {
+    const response = await this.client.delete(`/group-sessions/${sessionId}/participants/${participantId}`);
+    return response.data;
+  }
+
+  async startGroupSession(sessionId: string) {
+    const response = await this.client.post(`/group-sessions/${sessionId}/start`);
+    return response.data;
+  }
+
+  async completeGroupStop(sessionId: string, stopId: string) {
+    const response = await this.client.post(`/group-sessions/${sessionId}/stops/${stopId}/complete`);
+    return response.data;
+  }
+
+  async endGroupSession(sessionId: string) {
+    const response = await this.client.delete(`/group-sessions/${sessionId}`);
+    return response.data;
+  }
+
+  async getGroupSessionWSUrl(sessionId: string) {
+    const response = await this.client.get(`/group-sessions/${sessionId}/ws`);
+    return response.data;
+  }
+
   // Generic request methods
   async get<T>(url: string, config?: InternalAxiosRequestConfig) {
     const response = await this.client.get<T>(url, config);

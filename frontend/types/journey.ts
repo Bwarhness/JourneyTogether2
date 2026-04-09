@@ -67,3 +67,41 @@ export interface Session {
   started_at: string;
   updated_at: string;
 }
+
+// Sprint 4: Multiplayer group sessions
+export interface Participant {
+  id: string;
+  oduser_id: string;
+  username: string;
+  avatar_url: string | null;
+  status: 'joined' | 'checked_in' | 'left';
+  current_stop_index: number;
+  joined_at: string;
+}
+
+export interface GroupSession {
+  id: string;
+  journey_id: string;
+  journey: Journey;
+  stops: SessionStop[];
+  status: 'waiting' | 'active' | 'completed' | 'abandoned';
+  participants: Participant[];
+  invite_code: string;
+  current_stop_index: number;
+  started_at: string | null;
+  updated_at: string;
+}
+
+export interface GroupSessionState {
+  groupSession: GroupSession | null;
+  participants: Participant[];
+  loading: boolean;
+  error: string | null;
+  wsConnected: boolean;
+}
+
+// WebSocket event types
+export interface WSEvent {
+  type: 'participant_joined' | 'participant_left' | 'stop_completed' | 'session_started' | 'session_ended';
+  payload: Record<string, unknown>;
+}
