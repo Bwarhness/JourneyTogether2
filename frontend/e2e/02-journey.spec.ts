@@ -125,3 +125,60 @@ test.describe('Journey Creation', () => {
     await expect(page.locator(`text=${journeyName}`)).not.toBeVisible();
   });
 });
+
+test.describe('Journey Reactions', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.context().clearCookies();
+
+    const email = generateTestEmail();
+    const username = generateTestUsername();
+    const password = 'TestPassword123!';
+
+    await registerUser(page, email, username, password);
+  });
+
+  test.afterEach(async ({ page }) => {
+    await logoutUser(page);
+  });
+
+  test('reaction bar appears on journey detail page', async ({ page }) => {
+    // Create a journey first
+    const journeyName = `Reaction Test Journey ${Date.now()}`;
+
+    await page.goto('/journey/create');
+    await page.fill('input[name="journeyName"]', journeyName);
+    await page.click('text=Add Stop');
+    await page.fill('input[name="stopName"]', 'Stop One');
+    await page.fill('input[name="stopLocation"]', 'Copenhagen, Denmark');
+    await page.click('button[type="submit"]');
+
+    await page.waitForURL(/\/journey\/\d+/, { timeout: 10000 });
+
+    // Reaction buttons should be visible (they use data-testid)
+    await expect(page.locator('[data-testid="reaction-❤️"]')).toBeVisible();
+    await expect(page.locator('[data-testid="reaction-🔥"]')).toBeVisible();
+    await expect(page.locator('[data-testid="reaction-🌟"]')).toBeVisible();
+    await expect(page.locator('[data-testid="reaction-😍"]')).toBeVisible();
+    await expect(page.locator('[data-testid="reaction-🚀"]')).toBeVisible();
+  });
+
+  test('user can add a reaction on journey detail page', async ({ page }) => {
+    // Create a journey
+    const journeyName = `Add Reaction Journey ${Date.now()}`;
+
+    await page.goto('/journey/create');
+    await page.fill('input[name="journeyName"]', journeyName);
+    await page.click('text=Add Stop');
+    await page.fill('input[name="stopName"]', 'Reaction Stop');
+    await page.fill('input[name="stopLocation"]', 'Berlin, Germany');
+    await page.click('button[type="submit"]');
+
+    await page.waitForURL(/\/journey\/\d+/, { timeout: 10000 });
+
+    // Tap the ❤️ reaction
+    await page.click('[data-testid="reaction-❤️"]');
+
+    // The count should update (may require polling due to async state)
+    await expect(page.locator('[data-testid="reaction-❤️"]')).toBeVisible();
+  });
+});

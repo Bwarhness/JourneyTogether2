@@ -106,3 +106,25 @@ export interface WSEvent {
   type: 'participant_joined' | 'participant_left' | 'stop_completed' | 'session_started' | 'session_ended';
   payload: Record<string, unknown>;
 }
+
+// Sprint 7: Journey reactions
+export type ReactionEmoji = '❤️' | '🔥' | '🌟' | '😍' | '🚀';
+
+export const REACTION_EMOJIS: ReactionEmoji[] = ['❤️', '🔥', '🌟', '😍', '🚀'];
+
+export interface Reaction {
+  emoji: ReactionEmoji;
+  count: number;
+  // user_ids who reacted — empty array if not loaded, contains current user id if they reacted
+  user_ids: string[];
+}
+
+export interface JourneyReactions {
+  journey_id: string;
+  reactions: Reaction[];
+}
+
+// Extend Journey to include reactions (populated on detail screen)
+export interface JourneyWithReactions extends Journey {
+  reactions?: Reaction[];
+}

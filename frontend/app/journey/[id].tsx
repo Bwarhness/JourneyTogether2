@@ -13,8 +13,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { apiClient } from '@/api/client';
-import type { Stop } from '@/types/journey';
+import type { Stop, Reaction, ReactionEmoji } from '@/types/journey';
 import { Colors } from '@/constants/theme';
+import { ReactionBar } from '@/components/ReactionBar';
 
 function StopItem({ stop, index }: { stop: Stop; index: number }) {
   return (
@@ -59,6 +60,8 @@ export default function JourneyDetailScreen() {
     useJourneyStore();
   const [starting, setStarting] = useState(false);
   const [forking, setForking] = useState(false);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
+  const [reactionsLoading, setReactionsLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -66,6 +69,32 @@ export default function JourneyDetailScreen() {
     }
     return () => clearCurrentJourney();
   }, [id]);
+
+  // Fetch reactions when journey loads
+  useEffect(() => {
+    if (!id) return;
+    setReactionsLoading(true);
+    apiClient.getReactions(id)
+      .then((data) => setReactions(data.reactions as Reaction[]))
+      .catch(() => { /* reactions are optional, ignore errors */ })
+      .finally(() => setReactionsLoading(false));
+  }, [id]);
+
+  const handleReact = async (emoji: ReactionEmoji) => {
+    if (!id) return;
+    try {
+      const data = await apiClient.addReaction(id, emoji);
+      setReactions(data.reactions as Reaction[]);
+    } catch (err) {
+      // If removing an un-reacted emoji fails (e.g. 404), try to remove instead
+      try {
+        const data = await apiClient.removeReaction(id, emoji);
+        setReactions(data.reactions as Reaction[]);
+      } catch {
+        // silent fail — reactions are non-critical
+      }
+    }
+  };
 
   const handleStartSoloJourney = async () => {
     if (!currentJourney) return;
@@ -201,6 +230,11 @@ export default function JourneyDetailScreen() {
           {currentJourney.description ? (
             <Text style={styles.description}>{currentJourney.description}</Text>
           ) : null}
+
+          {/* Reactions */}
+          <View style={styles.reactionsSection}>
+            <ReactionBar reactions={reactions} onReact={handleReact} />
+          </View>
 
           {/* Stops */}
           <View style={styles.stopsSection}>
@@ -389,6 +423,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#333',
     lineHeight: 22,
+  },
+  reactionsSection: {
+    marginTop: 8,
   },
   stopsSection: {
     marginTop: 8,

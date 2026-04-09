@@ -1,12 +1,15 @@
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { Journey } from '../types/journey';
+import type { Journey, Reaction, ReactionEmoji } from '../types/journey';
 import { Colors } from '@/constants/theme';
+import { ReactionBar } from './ReactionBar';
 
 interface JourneyCardProps {
   journey: Journey;
   distanceMeters?: number | null;
+  reactions?: Reaction[];
   onPress: (journeyId: string) => void;
+  onReact?: (emoji: ReactionEmoji) => void;
 }
 
 function formatDistance(meters: number): string {
@@ -17,7 +20,7 @@ function formatDistance(meters: number): string {
   return `${km.toFixed(1)} km`;
 }
 
-export function JourneyCard({ journey, distanceMeters, onPress }: JourneyCardProps) {
+export function JourneyCard({ journey, distanceMeters, reactions = [], onPress, onReact }: JourneyCardProps) {
   const stopCount = journey.stops?.length ?? 0;
 
   return (
@@ -86,6 +89,13 @@ export function JourneyCard({ journey, distanceMeters, onPress }: JourneyCardPro
             </View>
           ) : null}
         </View>
+
+        {/* Reactions */}
+        {onReact && reactions.length > 0 && (
+          <View style={styles.reactionsRow}>
+            <ReactionBar reactions={reactions} onReact={onReact} size="small" />
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -186,5 +196,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.light.tint,
     fontWeight: '500',
+  },
+  reactionsRow: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
 });

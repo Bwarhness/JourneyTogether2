@@ -230,6 +230,22 @@ class ApiClient {
     return response.data;
   }
 
+  // Journey reactions (Sprint 7)
+  async addReaction(journeyId: string, emoji: string): Promise<{ reactions: Array<{ emoji: string; count: number; user_ids: string[] }> }> {
+    const response = await this.client.post(`/journeys/${journeyId}/reactions`, { emoji });
+    return response.data;
+  }
+
+  async removeReaction(journeyId: string, emoji: string): Promise<{ reactions: Array<{ emoji: string; count: number; user_ids: string[] }> }> {
+    const response = await this.client.delete(`/journeys/${journeyId}/reactions/${emoji}`);
+    return response.data;
+  }
+
+  async getReactions(journeyId: string): Promise<{ reactions: Array<{ emoji: string; count: number; user_ids: string[] }> }> {
+    const response = await this.client.get(`/journeys/${journeyId}/reactions`);
+    return response.data;
+  }
+
   // Voice note upload (Sprint 7)
   async uploadVoiceNote(sessionId: string, uri: string, stopId: string): Promise<{ voice_note_url: string }> {
     const formData = new FormData();
