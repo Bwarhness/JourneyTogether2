@@ -55,6 +55,10 @@ export default function HomeScreen() {
     router.push(`/journey/${journeyId}`);
   };
 
+  const handleSpontaneousPress = () => {
+    router.push('/session/spontaneous');
+  };
+
   const renderJourneyItem = ({ item }: { item: Journey }) => (
     <JourneyCard journey={item} onPress={handleJourneyPress} />
   );
@@ -84,6 +88,18 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Spontaneous Mode Banner */}
+      <TouchableOpacity style={styles.spontaneousBanner} onPress={handleSpontaneousPress} activeOpacity={0.8}>
+        <View style={styles.spontaneousBannerLeft}>
+          <Ionicons name="compass" size={24} color="#fff" />
+          <View>
+            <Text style={styles.spontaneousTitle}>Spontaneous Mode</Text>
+            <Text style={styles.spontaneousSubtitle}>Explore freely — no plan needed</Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
+      </TouchableOpacity>
+
       {/* Tab Header */}
       <View style={styles.tabHeader}>
         <TouchableOpacity
@@ -163,6 +179,38 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAFAF8',
+  },
+  spontaneousBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.light.tint,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 14,
+    shadowColor: Colors.light.tint,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  spontaneousBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  spontaneousTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  spontaneousSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
   },
   tabHeader: {
     flexDirection: 'row',

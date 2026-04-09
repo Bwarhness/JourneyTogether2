@@ -1,14 +1,15 @@
 import { create } from 'zustand';
 import { apiClient } from '../api/client';
-import type { Session } from '../types/journey';
+import type { Session, SpontaneousSession, SpontaneousStop } from '../types/journey';
 
 interface SessionState {
   activeSession: Session | null;
+  spontaneousSession: SpontaneousSession | null;
   loading: boolean;
   error: string | null;
   voiceNoteUploading: boolean;
 
-  // Actions
+  // Journey-based session actions
   fetchActiveSession: () => Promise<void>;
   startSession: (journeyId: string) => Promise<Session>;
   completeStop: (sessionId: string, stopId: string) => Promise<void>;
@@ -16,10 +17,19 @@ interface SessionState {
   attachVoiceNote: (sessionId: string, stopId: string, uri: string) => Promise<void>;
   clearSession: () => void;
   clearError: () => void;
+
+  // Spontaneous session actions (Sprint 7)
+  fetchSpontaneousSession: () => Promise<void>;
+  startSpontaneousSession: (title: string) => Promise<SpontaneousSession>;
+  addSpontaneousStop: (sessionId: string, input: { title: string; description?: string; location?: { lat: number; lng: number; label: string } }) => Promise<SpontaneousStop>;
+  completeSpontaneousStop: (sessionId: string, stopId: string) => Promise<void>;
+  endSpontaneousSession: (sessionId: string) => Promise<void>;
+  clearSpontaneousSession: () => void;
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
   activeSession: null,
+  spontaneousSession: null,
   loading: false,
   error: null,
   voiceNoteUploading: false,
@@ -122,4 +132,98 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   clearSession: () => set({ activeSession: null }),
   clearError: () => set({ error: null }),
+
+  // ── Spontaneous sessions ───────────────────────────────────────────────
+
+  fetchSpontaneousSession: async () => {
+    set({ loading: true, error: null });
+    try {
+      const session = await apiClient.getSpontaneousSession();
+      set({ spontaneousSession: session, loading: false });
+    } catch (error) {
+      if ((error as { response?: { status?: number } })?.response?.status === 404) {
+        set({ spontaneousSession: null, loading: false });
+      } else {
+        const message =
+          error instanceof Error
+            ? error.message
+            : (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+            || 'Failed to fetch spontaneous session';
+        set({ loading: false, error: message });
+      }
+    }
+  },
+
+  startSpontaneousSession: async (title: string) => {
+    set({ loading: true, error: null });
+    try {
+      const session: SpontaneousSession = await apiClient.startSpontaneousSession(title);
+      set({ spontaneousSession: session, loading: false });
+      return session;
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+          || 'Failed to start spontaneous session';
+      set({ loading: false, error: message });
+      throw error;
+    }
+  },
+
+  addSpontaneousStop: async (sessionId, input) => {
+    set({ loading: true, error: null });
+    try {
+      const stop: SpontaneousStop = await apiClient.addSpontaneousStop(sessionId, input);
+      set((state) => ({
+        spontaneousSession: state.spontaneousSession
+          ? { ...state.spontaneousSession, stops: [...state.spontaneousSession.stops, stop] }
+          : null,
+        loading: false,
+      }));
+      return stop;
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+          || 'Failed to add stop';
+      set({ loading: false, error: message });
+      throw error;
+    }
+  },
+
+  completeSpontaneousStop: async (sessionId, stopId) => {
+    set({ loading: true, error: null });
+    try {
+      const updated: SpontaneousSession = await apiClient.completeSpontaneousStop(sessionId, stopId);
+      set({ spontaneousSession: updated, loading: false });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+          || 'Failed to check in';
+      set({ loading: false, error: message });
+      throw error;
+    }
+  },
+
+  endSpontaneousSession: async (sessionId) => {
+    set({ loading: true, error: null });
+    try {
+      await apiClient.endSpontaneousSession(sessionId);
+      set({ spontaneousSession: null, loading: false });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+          || 'Failed to end session';
+      set({ loading: false, error: message });
+      throw error;
+    }
+  },
+
+  clearSpontaneousSession: () => set({ spontaneousSession: null }),
 }));

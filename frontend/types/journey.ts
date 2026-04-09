@@ -128,3 +128,23 @@ export interface JourneyReactions {
 export interface JourneyWithReactions extends Journey {
   reactions?: Reaction[];
 }
+
+// Sprint 7: Spontaneous session — a session without a predefined journey
+// Reuses SessionStop (checked_in_at is always null until user checks in)
+export interface SpontaneousStop {
+  id: string;
+  title: string;
+  description?: string;
+  location?: JourneyLocation;
+  checked_in_at: string | null; // null = not yet checked in
+  voice_note_url?: string | null;
+}
+
+export interface SpontaneousSession {
+  id: string;
+  title: string;
+  stops: SpontaneousStop[];
+  status: 'active' | 'completed' | 'abandoned';
+  started_at: string;
+  updated_at: string;
+}

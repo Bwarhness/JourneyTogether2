@@ -261,6 +261,34 @@ class ApiClient {
     return response.data;
   }
 
+  // Sprint 7: Spontaneous sessions (no predefined journey)
+  async startSpontaneousSession(title: string): Promise<import('../types/journey').SpontaneousSession> {
+    const response = await this.client.post('/sessions/spontaneous', { title });
+    return response.data;
+  }
+
+  async getSpontaneousSession(): Promise<import('../types/journey').SpontaneousSession | null> {
+    const response = await this.client.get('/sessions/spontaneous/active');
+    return response.data;
+  }
+
+  async addSpontaneousStop(
+    sessionId: string,
+    input: { title: string; description?: string; location?: { lat: number; lng: number; label: string } }
+  ): Promise<import('../types/journey').SpontaneousStop> {
+    const response = await this.client.post(`/sessions/spontaneous/${sessionId}/stops`, input);
+    return response.data;
+  }
+
+  async completeSpontaneousStop(sessionId: string, stopId: string): Promise<import('../types/journey').SpontaneousSession> {
+    const response = await this.client.post(`/sessions/spontaneous/${sessionId}/stops/${stopId}/complete`);
+    return response.data;
+  }
+
+  async endSpontaneousSession(sessionId: string): Promise<void> {
+    await this.client.delete(`/sessions/spontaneous/${sessionId}`);
+  }
+
   // Generic request methods
   async get<T>(url: string, config?: InternalAxiosRequestConfig) {
     const response = await this.client.get<T>(url, config);

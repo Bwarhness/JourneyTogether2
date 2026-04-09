@@ -119,6 +119,12 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
+          name="session/spontaneous"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
           name="home"
           options={{
             title: 'Home',
