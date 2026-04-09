@@ -42,7 +42,7 @@ export default function LoginScreen() {
           <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            name="email"
+            testID="email-input"
             placeholder="Enter your email"
             placeholderTextColor="#9BA1A6"
             value={email}
@@ -60,7 +60,7 @@ export default function LoginScreen() {
           <Text style={styles.label}>Password</Text>
           <TextInput
             style={styles.input}
-            name="password"
+            testID="password-input"
             placeholder="Enter your password"
             placeholderTextColor="#9BA1A6"
             value={password}

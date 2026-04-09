@@ -74,7 +74,7 @@ export default function RegisterScreen() {
           <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            name="email"
+            testID="email-input"
             placeholder="Enter your email"
             placeholderTextColor="#9BA1A6"
             value={email}
@@ -93,7 +93,7 @@ export default function RegisterScreen() {
           <Text style={styles.label}>Username</Text>
           <TextInput
             style={styles.input}
-            name="username"
+            testID="username-input"
             placeholder="Choose a username"
             placeholderTextColor="#9BA1A6"
             value={username}
@@ -111,7 +111,7 @@ export default function RegisterScreen() {
           <Text style={styles.label}>Password</Text>
           <TextInput
             style={styles.input}
-            name="password"
+            testID="password-input"
             placeholder="Create a password"
             placeholderTextColor="#9BA1A6"
             value={password}
@@ -128,7 +128,7 @@ export default function RegisterScreen() {
           <Text style={styles.label}>Confirm Password</Text>
           <TextInput
             style={styles.input}
-            name="confirmPassword"
+            testID="confirmPassword-input"
             placeholder="Confirm your password"
             placeholderTextColor="#9BA1A6"
             value={confirmPassword}
