@@ -44,6 +44,16 @@ interface JourneyState {
     duration_label: string;
     is_public: boolean;
   }>) => Promise<void>;
+  updateJourneyStops: (journeyId: string, stops: Array<{
+    id?: string;
+    title: string;
+    description?: string;
+    location: { lat: number; lng: number; label: string };
+    estimated_time?: number;
+    tips?: string[];
+    photo_requirement?: boolean;
+    order?: number;
+  }>) => Promise<void>;
   deleteJourney: (journeyId: string) => Promise<void>;
   clearCurrentJourney: () => void;
   clearError: () => void;
@@ -163,6 +173,25 @@ export const useJourneyStore = create<JourneyState>((set) => ({
           ? error.message
           : (error as { response?: { data?: { message?: string } } })?.response?.data?.message
           || 'Failed to update journey';
+      set({ loading: false, error: message });
+    }
+  },
+
+  updateJourneyStops: async (journeyId, stops) => {
+    set({ loading: true, error: null });
+    try {
+      const updated: Journey = await apiClient.updateJourneyStops(journeyId, stops);
+      set((state) => ({
+        currentJourney: state.currentJourney?.id === journeyId ? updated : state.currentJourney,
+        journeys: state.journeys.map((j) => (j.id === journeyId ? updated : j)),
+        loading: false,
+      }));
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+          || 'Failed to update journey stops';
       set({ loading: false, error: message });
     }
   },

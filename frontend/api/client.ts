@@ -179,6 +179,20 @@ class ApiClient {
     return response.data;
   }
 
+  async updateJourneyStops(journeyId: string, stops: Array<{
+    id?: string; // existing stop id (omit for new stops)
+    title: string;
+    description?: string;
+    location: { lat: number; lng: number; label: string };
+    estimated_time?: number;
+    tips?: string[];
+    photo_requirement?: boolean;
+    order?: number;
+  }>) {
+    const response = await this.client.put(`/journeys/${journeyId}/stops`, { stops });
+    return response.data;
+  }
+
   async deleteJourney(journeyId: string) {
     const response = await this.client.delete(`/journeys/${journeyId}`);
     return response.data;

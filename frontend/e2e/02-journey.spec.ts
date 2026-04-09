@@ -182,3 +182,107 @@ test.describe('Journey Reactions', () => {
     await expect(page.locator('[data-testid="reaction-❤️"]')).toBeVisible();
   });
 });
+
+test.describe('Journey Editing', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.context().clearCookies();
+
+    const email = generateTestEmail();
+    const username = generateTestUsername();
+    const password = 'TestPassword123!';
+
+    await registerUser(page, email, username, password);
+  });
+
+  test.afterEach(async ({ page }) => {
+    await logoutUser(page);
+  });
+
+  test('edit button visible for journey owner', async ({ page }) => {
+    // Create a journey first
+    const journeyName = `Edit Test Journey ${Date.now()}`;
+
+    await page.goto('/journey/create');
+    await page.fill('[data-testid="journey-title-input"]', journeyName);
+    await page.click('[data-testid="add-stop"]');
+    await page.fill('[data-testid="stop-title-0"]', 'Original Stop');
+    await page.fill('[data-testid="stop-location-label-0"]', 'Copenhagen, Denmark');
+    await page.click('[data-testid="create-journey-submit"]');
+
+    // Wait for journey detail page
+    await page.waitForURL(/\/journey\/\d+/, { timeout: 10000 });
+
+    // Edit button should be visible in hero bar and body
+    await expect(page.locator('[data-testid="edit-journey-button"]').first()).toBeVisible();
+  });
+
+  test('user can edit journey title and description', async ({ page }) => {
+    const originalTitle = `Original Title ${Date.now()}`;
+    const newTitle = `Edited Title ${Date.now()}`;
+
+    // Create a journey first
+    await page.goto('/journey/create');
+    await page.fill('[data-testid="journey-title-input"]', originalTitle);
+    await page.fill('[data-testid="journey-description-input"]', 'Original description');
+    await page.click('[data-testid="add-stop"]');
+    await page.fill('[data-testid="stop-title-0"]', 'First Stop');
+    await page.fill('[data-testid="stop-location-label-0"]', 'Oslo, Norway');
+    await page.click('[data-testid="create-journey-submit"]');
+
+    await page.waitForURL(/\/journey\/\d+/, { timeout: 10000 });
+
+    // Navigate to edit screen
+    await page.click('[data-testid="edit-journey-button"]');
+    await expect(page).toHaveURL(/\/journey\/\d+\/edit/);
+
+    // Verify pre-populated fields
+    await expect(page.locator('[data-testid="journey-title-input"]')).toHaveValue(originalTitle);
+
+    // Edit the title and description
+    await page.fill('[data-testid="journey-title-input"]', newTitle);
+    await page.fill('[data-testid="journey-description-input"]', 'Updated description');
+
+    // Submit
+    await page.click('[data-testid="edit-journey-submit"]');
+
+    // Should navigate back to detail page
+    await expect(page).toHaveURL(/\/journey\/\d+/, { timeout: 10000 });
+
+    // Verify updated content is visible
+    await expect(page.locator(`text=${newTitle}`)).toBeVisible();
+    await expect(page.locator('text=Updated description')).toBeVisible();
+  });
+
+  test('user can add and remove stops when editing', async ({ page }) => {
+    const journeyName = `Stops Edit Test ${Date.now()}`;
+
+    // Create a journey with one stop
+    await page.goto('/journey/create');
+    await page.fill('[data-testid="journey-title-input"]', journeyName);
+    await page.click('[data-testid="add-stop"]');
+    await page.fill('[data-testid="stop-title-0"]', 'Stop One');
+    await page.fill('[data-testid="stop-location-label-0"]', 'Vienna, Austria');
+    await page.click('[data-testid="create-journey-submit"]');
+
+    await page.waitForURL(/\/journey\/\d+/, { timeout: 10000 });
+
+    // Navigate to edit screen
+    await page.click('[data-testid="edit-journey-button"]');
+    await expect(page).toHaveURL(/\/journey\/\d+\/edit/);
+
+    // Add a second stop
+    await page.click('[data-testid="add-stop"]');
+    await page.fill('[data-testid="stop-title-1"]', 'Stop Two');
+    await page.fill('[data-testid="stop-location-label-1"]', 'Prague, Czechia');
+
+    // Submit
+    await page.click('[data-testid="edit-journey-submit"]');
+
+    // Should return to detail page
+    await expect(page).toHaveURL(/\/journey\/\d+/, { timeout: 10000 });
+
+    // Both stops should be visible
+    await expect(page.locator('text=Stop One')).toBeVisible();
+    await expect(page.locator('text=Stop Two')).toBeVisible();
+  });
+});

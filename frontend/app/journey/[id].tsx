@@ -223,18 +223,27 @@ export default function JourneyDetailScreen() {
             </TouchableOpacity>
             {/* Delete button — owner only */}
             {isOwner && (
-              <TouchableOpacity
-                style={styles.heroDeleteBtn}
-                onPress={handleDelete}
-                disabled={deleting}
-                data-testid="delete-journey-button"
-              >
-                {deleting ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Ionicons name="trash" size={18} color="#fff" />
-                )}
-              </TouchableOpacity>
+              <View style={styles.heroActionBtns}>
+                <TouchableOpacity
+                  style={styles.heroEditBtn}
+                  onPress={() => router.push(`/journey/${id}/edit`)}
+                  data-testid="edit-journey-button"
+                >
+                  <Ionicons name="pencil" size={16} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.heroDeleteBtn}
+                  onPress={handleDelete}
+                  disabled={deleting}
+                  data-testid="delete-journey-button"
+                >
+                  {deleting ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Ionicons name="trash" size={18} color="#fff" />
+                  )}
+                </TouchableOpacity>
+              </View>
             )}
           </View>
           <View style={styles.heroContent}>
@@ -287,21 +296,31 @@ export default function JourneyDetailScreen() {
 
           {/* Owner actions */}
           {isOwner && (
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={handleDelete}
-              disabled={deleting}
-              data-testid="delete-journey-button"
-            >
-              {deleting ? (
-                <ActivityIndicator size="small" color="#DC3232" />
-              ) : (
-                <>
-                  <Ionicons name="trash-outline" size={18} color="#DC3232" />
-                  <Text style={styles.deleteButtonText}>Delete Journey</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            <View style={styles.ownerActionsRow}>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => router.push(`/journey/${id}/edit`)}
+                data-testid="edit-journey-button"
+              >
+                <Ionicons name="pencil-outline" size={18} color={Colors.light.tint} />
+                <Text style={styles.editButtonText}>Edit Journey</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={handleDelete}
+                disabled={deleting}
+                data-testid="delete-journey-button"
+              >
+                {deleting ? (
+                  <ActivityIndicator size="small" color="#DC3232" />
+                ) : (
+                  <>
+                    <Ionicons name="trash-outline" size={18} color="#DC3232" />
+                    <Text style={styles.deleteButtonText}>Delete Journey</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           )}
 
           {/* Reactions */}
@@ -426,6 +445,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  heroActionBtns: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  heroEditBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   heroDeleteBtn: {
     width: 36,
     height: 36,
@@ -526,7 +557,29 @@ const styles = StyleSheet.create({
   reactionsSection: {
     marginTop: 8,
   },
+  ownerActionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  editButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: Colors.light.tint,
+    backgroundColor: '#fff',
+  },
+  editButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.light.tint,
+  },
   deleteButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
