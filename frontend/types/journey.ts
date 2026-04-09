@@ -46,3 +46,24 @@ export interface CreateJourneyInput {
   is_public?: boolean;
   stops?: Omit<Stop, 'id' | 'journey_id'>[];
 }
+
+// Session types (Sprint 3: Active Journey)
+export interface SessionStop {
+  id: string;
+  title: string;
+  description?: string;
+  location?: JourneyLocation;
+  estimated_time: number;
+  tips: string[];
+  checked_in_at: string | null; // ISO timestamp when checked in, null if not yet
+}
+
+export interface Session {
+  id: string;
+  journey: Journey;
+  stops: SessionStop[];
+  current_stop_index: number;
+  status: 'active' | 'completed' | 'abandoned';
+  started_at: string;
+  updated_at: string;
+}

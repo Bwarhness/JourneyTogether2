@@ -80,6 +80,21 @@ class ApiClient {
     return response.data;
   }
 
+  async getActiveSession() {
+    const response = await this.client.get('/sessions/active');
+    return response.data;
+  }
+
+  async completeStop(sessionId: string, stopId: string) {
+    const response = await this.client.post(`/sessions/${sessionId}/stops/${stopId}/complete`);
+    return response.data;
+  }
+
+  async endSession(sessionId: string) {
+    const response = await this.client.delete(`/sessions/${sessionId}`);
+    return response.data;
+  }
+
   // Generic request methods
   async get<T>(url: string, config?: InternalAxiosRequestConfig) {
     const response = await this.client.get<T>(url, config);
