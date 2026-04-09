@@ -5,7 +5,6 @@ import {
   registerUser,
   loginUser,
   logoutUser,
-  isLoggedIn,
 } from './helpers/auth';
 
 const API_BASE_URL = process.env.API_BASE_URL || 'http://192.168.1.200:3000';
@@ -28,9 +27,9 @@ test.describe('Authentication Flow', () => {
     await expect(page).toHaveURL(/\/register/);
     
     // Should see registration form fields
-    await expect(page.locator('input[name="email"]')).toBeVisible();
-    await expect(page.locator('input[name="username"]')).toBeVisible();
-    await expect(page.locator('input[name="password"]')).toBeVisible();
+    await expect(page.locator('[data-testid="email-input"]')).toBeVisible();
+    await expect(page.locator('[data-testid="username-input"]')).toBeVisible();
+    await expect(page.locator('[data-testid="password-input"]')).toBeVisible();
   });
 
   test('registration: user can register with valid credentials', async ({ page }) => {
@@ -42,10 +41,10 @@ test.describe('Authentication Flow', () => {
     await page.goto('/register');
 
     // Fill out the form
-    await page.fill('input[name="email"]', email);
-    await page.fill('input[name="username"]', username);
-    await page.fill('input[name="password"]', password);
-    await page.fill('input[name="confirmPassword"]', password);
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="username-input"]', username);
+    await page.fill('[data-testid="password-input"]', password);
+    await page.fill('[data-testid="confirmPassword-input"]', password);
 
     // Submit
     await page.click('button[type="submit"]');
@@ -61,10 +60,10 @@ test.describe('Authentication Flow', () => {
     await page.goto('/register');
 
     // Fill with invalid email
-    await page.fill('input[name="email"]', 'notanemail');
-    await page.fill('input[name="username"]', 'testuser');
-    await page.fill('input[name="password"]', 'TestPassword123!');
-    await page.fill('input[name="confirmPassword"]', 'TestPassword123!');
+    await page.fill('[data-testid="email-input"]', 'notanemail');
+    await page.fill('[data-testid="username-input"]', 'testuser');
+    await page.fill('[data-testid="password-input"]', 'TestPassword123!');
+    await page.fill('[data-testid="confirmPassword-input"]', 'TestPassword123!');
 
     await page.click('button[type="submit"]');
 
@@ -75,10 +74,10 @@ test.describe('Authentication Flow', () => {
   test('registration: shows error when passwords do not match', async ({ page }) => {
     await page.goto('/register');
 
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="username"]', 'testuser');
-    await page.fill('input[name="password"]', 'Password123!');
-    await page.fill('input[name="confirmPassword"]', 'DifferentPassword123!');
+    await page.fill('[data-testid="email-input"]', 'test@example.com');
+    await page.fill('[data-testid="username-input"]', 'testuser');
+    await page.fill('[data-testid="password-input"]', 'Password123!');
+    await page.fill('[data-testid="confirmPassword-input"]', 'DifferentPassword123!');
 
     await page.click('button[type="submit"]');
 
@@ -96,8 +95,8 @@ test.describe('Authentication Flow', () => {
     await expect(page).toHaveURL(/\/login/);
 
     // Should see login form
-    await expect(page.locator('input[name="email"]')).toBeVisible();
-    await expect(page.locator('input[name="password"]')).toBeVisible();
+    await expect(page.locator('[data-testid="email-input"]')).toBeVisible();
+    await expect(page.locator('[data-testid="password-input"]')).toBeVisible();
   });
 
   test('login: user can login with valid credentials', async ({ page }) => {
@@ -128,8 +127,8 @@ test.describe('Authentication Flow', () => {
     await page.goto('/login');
 
     // Login with non-existent user
-    await page.fill('input[name="email"]', 'nonexistent@example.com');
-    await page.fill('input[name="password"]', 'WrongPassword123!');
+    await page.fill('[data-testid="email-input"]', 'nonexistent@example.com');
+    await page.fill('[data-testid="password-input"]', 'WrongPassword123!');
 
     await page.click('button[type="submit"]');
 
@@ -148,8 +147,8 @@ test.describe('Authentication Flow', () => {
 
     // Try to login with wrong password
     await page.goto('/login');
-    await page.fill('input[name="email"]', email);
-    await page.fill('input[name="password"]', 'WrongPassword123!');
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="password-input"]', 'WrongPassword123!');
 
     await page.click('button[type="submit"]');
 

@@ -18,7 +18,6 @@ export function generateTestUsername(): string {
 
 /**
  * Register a new user via the UI
- * Note: This function will need to be updated as the UI is built
  */
 export async function registerUser(
   page: Page,
@@ -30,10 +29,10 @@ export async function registerUser(
   await page.goto('/register');
   
   // Fill in the registration form
-  await page.fill('input[name="email"]', email);
-  await page.fill('input[name="username"]', username);
-  await page.fill('input[name="password"]', password);
-  await page.fill('input[name="confirmPassword"]', password);
+  await page.fill('[data-testid="email-input"]', email);
+  await page.fill('[data-testid="username-input"]', username);
+  await page.fill('[data-testid="password-input"]', password);
+  await page.fill('[data-testid="confirmPassword-input"]', password);
   
   // Submit the form
   await page.click('button[type="submit"]');
@@ -44,7 +43,6 @@ export async function registerUser(
 
 /**
  * Login with existing user via the UI
- * Note: This function will need to be updated as the UI is built
  */
 export async function loginUser(
   page: Page,
@@ -55,8 +53,8 @@ export async function loginUser(
   await page.goto('/login');
   
   // Fill in the login form
-  await page.fill('input[name="email"]', email);
-  await page.fill('input[name="password"]', password);
+  await page.fill('[data-testid="email-input"]', email);
+  await page.fill('[data-testid="password-input"]', password);
   
   // Submit the form
   await page.click('button[type="submit"]');
@@ -67,7 +65,6 @@ export async function loginUser(
 
 /**
  * Logout the current user
- * Note: This function will need to be updated as the UI is built
  */
 export async function logoutUser(page: Page): Promise<void> {
   // Find and click the logout button/menu
