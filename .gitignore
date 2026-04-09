@@ -51,3 +51,8 @@ ios/Pods/
 # *.jpg
 # *.png
 # *.mp4
+-e 
+# Playwright
+test-results/
+playwright-report/
+*.playwright快照
