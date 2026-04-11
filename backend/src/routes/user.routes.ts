@@ -39,6 +39,38 @@ router.get('/:id', optionalAuth, (req: Request, res: Response, next: NextFunctio
   }
 });
 
+// GET /users/:id/journeys — get journeys created by a user
+router.get('/:id/journeys', optionalAuth, (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const db = getDb();
+    const { id } = req.params;
+
+    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(id);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    const rows = db.prepare(`
+      SELECT j.*, u.display_name as creator_name,
+             ff.title as forked_from_title
+      FROM journeys j
+      JOIN users u ON j.created_by = u.id
+      LEFT JOIN journeys ff ON j.forked_from_id = ff.id
+      WHERE j.created_by = ?
+      ORDER BY j.created_at DESC
+    `).all(id) as Record<string, unknown>[];
+
+    // If requester is the owner, include private journeys too
+    const isOwner = req.user?.id === id;
+
+    const publicRows = rows.filter((j) => j.is_public || isOwner);
+    res.json(publicRows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /users/me/history — journey history (completions)
 router.get('/me/history', requireAuth, (req: Request, res: Response, next: NextFunction) => {
   try {
