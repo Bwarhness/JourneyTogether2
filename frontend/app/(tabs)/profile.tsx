@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../src/stores/authStore';
 import { useJourneyStore } from '../../stores/journeyStore';
+import { apiClient } from '../../src/api/client';
 import { Colors } from '../../constants/theme';
 import { useColorScheme } from '../../hooks/use-color-scheme';
 
@@ -35,10 +36,16 @@ export default function ProfileScreen() {
   const [displayName, setDisplayName] = useState(user?.display_name ?? '');
   const [username, setUsername] = useState(user?.username ?? '');
   const [saving, setSaving] = useState(false);
+  const [completionCount, setCompletionCount] = useState(0);
 
   useEffect(() => {
     if (user?.id) {
       fetchUserJourneys(user.id);
+      apiClient.getUserProfile(user.id).then((profile) => {
+        setCompletionCount(profile.completion_count ?? 0);
+      }).catch(() => {
+        // Silently fail — stat is non-critical
+      });
     }
   }, [user?.id]);
 
@@ -203,7 +210,9 @@ export default function ProfileScreen() {
           </View>
           <View style={[styles.statCard, { backgroundColor: colorScheme === 'dark' ? '#1a1a1a' : '#fff' }]}>
             <Ionicons name="navigate" size={24} color={colors.tint} />
-            <Text style={[styles.statValue, { color: colorScheme === 'dark' ? '#fff' : '#222' }]}>—</Text>
+            <Text style={[styles.statValue, { color: colorScheme === 'dark' ? '#fff' : '#222' }]}>
+              {completionCount}
+            </Text>
             <Text style={[styles.statLabel, { color: colorScheme === 'dark' ? '#aaa' : '#777' }]}>
               Sessions Completed
             </Text>
