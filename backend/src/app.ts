@@ -9,6 +9,7 @@ import userRoutes from './routes/user.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import reactionRoutes from './routes/reaction.routes.js';
 import spontaneousRoutes from './routes/spontaneous.routes.js';
+import groupSessionRoutes from './routes/groupSession.routes.js';
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || '/mnt/user/journeytogether/uploads';
 
@@ -34,6 +35,7 @@ export function createApp(): express.Application {
   app.use('/upload', uploadRoutes);
   app.use('/journeys', reactionRoutes);
   app.use('/spontaneous', spontaneousRoutes);
+  app.use('/sessions/group', groupSessionRoutes);
 
   // Error handler (must be last)
   app.use(errorHandler);
