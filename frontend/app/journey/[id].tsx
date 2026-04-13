@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useGroupSessionStore } from '@/stores/groupSessionStore';
 import { apiClient } from '@/api/client';
 import type { Stop, Reaction, ReactionEmoji } from '@/types/journey';
 import { Colors } from '@/constants/theme';
@@ -60,7 +61,9 @@ export default function JourneyDetailScreen() {
   const { currentJourney, loading, error, fetchJourneyDetail, clearCurrentJourney, forkJourney, deleteJourney } =
     useJourneyStore();
   const { user } = useAuthStore();
+  const { createGroupSession } = useGroupSessionStore();
   const [starting, setStarting] = useState(false);
+  const [startingGroup, setStartingGroup] = useState(false);
   const [forking, setForking] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [reactions, setReactions] = useState<Reaction[]>([]);
@@ -119,6 +122,24 @@ export default function JourneyDetailScreen() {
       Alert.alert('Error', message);
     } finally {
       setStarting(false);
+    }
+  };
+
+  const handleStartGroupJourney = async () => {
+    if (!currentJourney) return;
+
+    setStartingGroup(true);
+    try {
+      await createGroupSession(currentJourney.id);
+      router.push('/session/group');
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to start group journey. Please try again.';
+      Alert.alert('Error', message);
+    } finally {
+      setStartingGroup(false);
     }
   };
 
@@ -365,6 +386,23 @@ export default function JourneyDetailScreen() {
             </>
           )}
         </TouchableOpacity>
+        {stops.length > 0 && (
+          <TouchableOpacity
+            style={[styles.forkButton, startingGroup && styles.forkButtonDisabled]}
+            onPress={handleStartGroupJourney}
+            disabled={startingGroup}
+            data-testid="start-group-journey-button"
+          >
+            {startingGroup ? (
+              <ActivityIndicator size="small" color={Colors.light.tint} />
+            ) : (
+              <>
+                <Ionicons name="people" size={18} color={Colors.light.tint} />
+                <Text style={styles.forkButtonText}>Start Group Journey</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={[styles.forkButton, forking && styles.forkButtonDisabled]}
           onPress={handleFork}

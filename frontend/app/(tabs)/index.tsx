@@ -7,11 +7,14 @@ import {
   RefreshControl,
   StyleSheet,
   ActivityIndicator,
+  Alert,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useGroupSessionStore } from '@/stores/groupSessionStore';
 import { JourneyCard } from '@/components/JourneyCard';
 import type { Journey } from '@/types/journey';
 import { Colors } from '@/constants/theme';
@@ -26,6 +29,7 @@ export default function HomeScreen() {
   const { nearbyJourneys, journeys, loading, error, fetchNearbyJourneys, fetchUserJourneys } =
     useJourneyStore();
   const { user } = useAuthStore();
+  const { joinGroupSession } = useGroupSessionStore();
 
   // Mock location - in production this would come from expo-location
   const mockLocation = { lat: 55.6761, lng: 12.5683 }; // Copenhagen
@@ -57,6 +61,27 @@ export default function HomeScreen() {
 
   const handleSpontaneousPress = () => {
     router.push('/session/spontaneous');
+  };
+
+  const handleJoinGroupPress = () => {
+    Alert.prompt(
+      'Join Group Session',
+      'Enter the 6-character invite code:',
+      async (code) => {
+        if (!code || code.trim().length === 0) return;
+        const trimmed = code.trim().toUpperCase();
+        try {
+          await joinGroupSession(trimmed);
+          router.push('/session/group');
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Invalid invite code or session not found.';
+          Alert.alert('Error', message);
+        }
+      },
+      'plain-text',
+      '',
+      'default'
+    );
   };
 
   const renderJourneyItem = ({ item }: { item: Journey }) => (
@@ -95,6 +120,18 @@ export default function HomeScreen() {
           <View>
             <Text style={styles.spontaneousTitle}>Spontaneous Mode</Text>
             <Text style={styles.spontaneousSubtitle}>Explore freely — no plan needed</Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
+      </TouchableOpacity>
+
+      {/* Join Group Session Banner */}
+      <TouchableOpacity style={styles.groupBanner} onPress={handleJoinGroupPress} activeOpacity={0.8} data-testid="join-group-session-button">
+        <View style={styles.spontaneousBannerLeft}>
+          <Ionicons name="people" size={24} color="#fff" />
+          <View>
+            <Text style={styles.spontaneousTitle}>Join Group Session</Text>
+            <Text style={styles.spontaneousSubtitle}>Enter an invite code to join</Text>
           </View>
         </View>
         <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
@@ -192,6 +229,23 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     shadowColor: Colors.light.tint,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  groupBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#8B5CF6',
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 14,
+    shadowColor: '#8B5CF6',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 6,

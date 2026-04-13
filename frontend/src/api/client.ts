@@ -225,6 +225,12 @@ class ApiClient {
     return response.data;
   }
 
+  async getGroupSessionByInviteCode(inviteCode: string) {
+    // Lookup session by invite code (doesn't join) — used before joinGroupSession
+    const response = await this.client.get(`/sessions/group/code/${inviteCode.toUpperCase()}`);
+    return response.data;
+  }
+
   async getGroupSessionWsUrl(sessionId: string) {
     // WebSocket URL — token is attached by the interceptor via AsyncStorage
     const token = await AsyncStorage.getItem(TOKEN_KEY);
