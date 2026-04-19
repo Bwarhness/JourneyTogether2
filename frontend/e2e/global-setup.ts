@@ -9,7 +9,7 @@ import { chromium } from '@playwright/test';
  * - Set up any mocking infrastructure
  */
 export default async () => {
-  const apiBaseUrl = process.env.API_BASE_URL || 'http://192.168.1.200:3000';
+  const apiBaseUrl = process.env.API_BASE_URL || 'http://192.168.1.200:4000';
   
   // Verify backend is reachable
   console.log(`[Global Setup] Checking backend at ${apiBaseUrl}...`);
