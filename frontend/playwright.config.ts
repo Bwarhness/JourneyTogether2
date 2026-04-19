@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // Backend API URL - change this to match your running backend
-const API_BASE_URL = process.env.API_BASE_URL || 'http://192.168.1.200:3000';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://192.168.1.200:4000';
 
 // Expo web server URL
 const WEB_URL = process.env.WEB_URL || 'http://localhost:8081';
