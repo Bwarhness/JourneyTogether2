@@ -71,18 +71,7 @@ export default function RootLayout() {
             headerShown: false,
           }}
         />
-        <Stack.Screen
-          name="auth/login"
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="auth/register"
-          options={{
-            headerShown: false,
-          }}
-        />
+
         <Stack.Screen
           name="modal"
           options={{
@@ -103,12 +92,7 @@ export default function RootLayout() {
             headerShown: false,
           }}
         />
-        <Stack.Screen
-          name="home"
-          options={{
-            title: 'Home',
-          }}
-        />
+
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
