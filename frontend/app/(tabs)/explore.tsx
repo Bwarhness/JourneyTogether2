@@ -112,7 +112,7 @@ export default function ExploreScreen() {
           <Ionicons name="search-outline" size={56} color="#ccc" />
           <Text style={styles.emptyTitle}>No journeys found</Text>
           <Text style={styles.emptyText}>
-            No journeys match "{query.trim()}".{'\n'}Try different keywords or browse popular journeys.
+            No journeys match &quot;{query.trim()}&quot;.{'\n'}Try different keywords or browse popular journeys.
           </Text>
           <TouchableOpacity style={styles.browseButton} onPress={handleClearSearch}>
             <Text style={styles.browseButtonText}>Browse Popular Journeys</Text>
