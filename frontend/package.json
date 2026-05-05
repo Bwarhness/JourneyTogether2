@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:docker": "/home/node/.openclaw/scripts/run-playwright-tests.sh",
+    "test:e2e:docker": "docker compose --profile e2e run --rm e2e",
+    "test:e2e:docker:legacy": "/home/node/.openclaw/scripts/run-playwright-tests.sh",
     "dev:all": "concurrently \"npm run dev:web\" \"echo 'Backend: http://192.168.1.200:3000'\""
   },
   "dependencies": {
@@ -54,7 +55,7 @@
     "concurrently": "^9.2.1",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
-    "playwright": "^1.59.1",
+    "playwright": "^1.49.0",
     "typescript": "^5.4.5"
   },
   "private": true
