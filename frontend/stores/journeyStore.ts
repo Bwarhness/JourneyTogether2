@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiClient } from '../api/client';
+// import { apiClient } from '../api/client'; // DEPRECATED - use supabaseClient
 import type { Journey } from '../types/journey';
 
 interface JourneyState {
