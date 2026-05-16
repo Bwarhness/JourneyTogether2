@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  journeytogether-frontend:
+    build:
+      context: ./frontend
+      args:
+        EXPO_PUBLIC_SUPABASE_URL: https://nligtfvaxrwtrhdvwuug.supabase.co
+        EXPO_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5saWd0ZnZheHJ3dHJoZHZ3dXVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NTcwNDksImV4cCI6MjA5NDUzMzA0OX0.R5vSEOZx-KHy4iktVOc8zaOJ5oVrlNYucwGZ2I2uaXI
+        EXPO_PUBLIC_SUPABASE_STORAGE_BUCKET: journey-uploads
+    container_name: journeytogether-frontend
+    restart: unless-stopped
+    ports:
+      - "3020:80"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
