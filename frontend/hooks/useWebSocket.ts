@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { apiClient } from '../api/client';
+// import { apiClient } from '../api/client'; // DEPRECATED
 import type { WSEvent } from '../types/journey';
 
 const WS_RECONNECT_DELAY_MS = 3000;

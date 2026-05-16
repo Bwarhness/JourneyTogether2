@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { apiClient } from '@/api/client';
+// import { apiClient } from '@/api/client'; // DEPRECATED
 import { Colors } from '@/constants/theme';
 
 interface CoverImagePickerProps {

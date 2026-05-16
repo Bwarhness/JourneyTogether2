@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../src/stores/authStore';
 import { useJourneyStore } from '../../stores/journeyStore';
-import { apiClient } from '../../src/api/client';
+// import { apiClient } from '../../src/api/client'; // DEPRECATED
 import { Colors } from '../../constants/theme';
 import { useColorScheme } from '../../hooks/use-color-scheme';
 
