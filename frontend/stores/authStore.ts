@@ -1,18 +1,18 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiClient, TOKEN_KEY } from '../api/client';
+import { signIn, signUp, signOut, getUser, getProfile } from '../api/supabaseClient';
 
 export interface User {
   id: string;
   email: string;
-  username: string;
-  display_name?: string;
+  display_name: string;
+  avatar_url?: string;
+  role?: string;
 }
 
 interface AuthState {
   user: User | null;
-  token: string | null;
   isLoading: boolean;
   isInitialized: boolean;
   error: string | null;
@@ -21,7 +21,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  loadToken: () => Promise<void>;
+  loadUser: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -29,7 +29,6 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      token: null,
       isLoading: false,
       isInitialized: false,
       error: null,
@@ -37,23 +36,30 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const data = await apiClient.login(email, password);
-          const { token, user } = data;
+          const { user, session } = await signIn(email, password);
           
-          // Store token
-          await AsyncStorage.setItem(TOKEN_KEY, token);
+          if (!user || !session) {
+            throw new Error('Login failed');
+          }
+
+          // Get profile
+          const profile = await getProfile(user.id);
           
           set({ 
-            user: user || { id: data.user_id || data.id, email, username: data.username }, 
-            token, 
+            user: {
+              id: profile.id,
+              email: profile.email,
+              display_name: profile.display_name,
+              avatar_url: profile.avatar_url,
+              role: profile.role,
+            },
             isLoading: false 
           });
         } catch (error: unknown) {
           const errorMessage = 
             error instanceof Error 
               ? error.message 
-              : (error as { response?: { data?: { message?: string } } })?.response?.data?.message 
-              || 'Login failed';
+              : 'Login failed';
           set({ isLoading: false, error: errorMessage });
           throw error;
         }
@@ -62,23 +68,25 @@ export const useAuthStore = create<AuthState>()(
       register: async (email: string, username: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const data = await apiClient.register(email, username, password);
-          const { token, user } = data;
+          const { user, session } = await signUp(email, password, username);
           
-          // Store token
-          await AsyncStorage.setItem(TOKEN_KEY, token);
-          
+          if (!user) {
+            throw new Error('Registration failed');
+          }
+
           set({ 
-            user: user || { id: data.user_id || data.id, email, username }, 
-            token, 
+            user: {
+              id: user.id,
+              email: user.email || email,
+              display_name: username,
+            },
             isLoading: false 
           });
         } catch (error: unknown) {
           const errorMessage = 
             error instanceof Error 
               ? error.message 
-              : (error as { response?: { data?: { message?: string } } })?.response?.data?.message 
-              || 'Registration failed';
+              : 'Registration failed';
           set({ isLoading: false, error: errorMessage });
           throw error;
         }
@@ -86,30 +94,38 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          await AsyncStorage.removeItem(TOKEN_KEY);
+          await signOut();
         } catch {
-          // Ignore storage errors
+          // Ignore errors
         }
-        set({ user: null, token: null, error: null });
+        set({ user: null, error: null });
       },
 
-      loadToken: async () => {
+      loadUser: async () => {
         if (get().isInitialized) return;
         
         set({ isLoading: true });
         try {
-          const token = await AsyncStorage.getItem(TOKEN_KEY);
-          if (token) {
-            // Verify token is still valid by fetching user data
-            const user = await apiClient.getMe();
-            set({ token, user, isLoading: false, isInitialized: true });
+          const user = await getUser();
+          if (user) {
+            const profile = await getProfile(user.id);
+            set({ 
+              user: {
+                id: profile.id,
+                email: profile.email,
+                display_name: profile.display_name,
+                avatar_url: profile.avatar_url,
+                role: profile.role,
+              },
+              isLoading: false,
+              isInitialized: true 
+            });
           } else {
             set({ isLoading: false, isInitialized: true });
           }
         } catch {
-          // Token invalid or expired
-          await AsyncStorage.removeItem(TOKEN_KEY);
-          set({ token: null, user: null, isLoading: false, isInitialized: true });
+          // Not logged in
+          set({ user: null, isLoading: false, isInitialized: true });
         }
       },
 
@@ -119,7 +135,6 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ 
-        token: state.token,
         user: state.user,
       }),
     }
@@ -128,5 +143,5 @@ export const useAuthStore = create<AuthState>()(
 
 // Selector hooks for convenience
 export const useUser = () => useAuthStore((state) => state.user);
-export const useIsLoggedIn = () => useAuthStore((state) => !!state.token);
+export const useIsLoggedIn = () => useAuthStore((state) => !!state.user);
 export const useAuthLoading = () => useAuthStore((state) => state.isLoading);
