@@ -1,123 +1,249 @@
-# JourneyTogether
+# JourneyTogether 2.0 - Frontend Only
 
-A mobile app for shared travel experiences — create journeys, check in at stops, and relive adventures together.
+**Architecture:** Direct Supabase integration (no backend server)
 
-## Tech Stack
-
-- **Framework:** Expo SDK 54 / React Native 0.81
-- **Navigation:** expo-router (file-based routing)
-- **State:** Zustand
-- **HTTP:** Axios with JWT interceptors
-- **Voice:** expo-av
-- **Images:** expo-image, expo-image-picker
-
-## Project Structure
+## 🏗️ Architecture
 
 ```
-app/                    # expo-router pages (file-based routing)
-├── (tabs)/             # Bottom tab navigator
-│   ├── index.tsx       # Home — journey list
-│   ├── explore.tsx     # Explore — discover public journeys
-│   └── profile.tsx     # Profile — user stats + settings
-├── auth/
-│   ├── login.tsx       # Login screen
-│   └── register.tsx   # Registration screen
-├── journey/
-│   ├── [id].tsx        # Journey detail + stops
-│   ├── [id]/edit.tsx  # Edit journey
-│   └── create.tsx      # Create new journey
-└── session/
-    ├── active.tsx      # Solo active session (check-in flow)
-    ├── group.tsx       # Multiplayer group session
-    └── spontaneous.tsx # Quick session without a plan
-
-api/                    # API client + endpoint methods
-components/            # Reusable UI components
-constants/              # Theme + config
-hooks/                  # Custom React hooks
-stores/                 # Zustand state stores
-types/                  # TypeScript types
-e2e/                    # Playwright E2E tests
+┌─────────────────┐
+│   Expo App      │
+│  (React Native) │
+└────────┬────────┘
+         │
+         │ Supabase Client
+         │ - Auth
+         │ - Database (PostgREST)
+         │ - Realtime
+         │ - Storage
+         ▼
+┌─────────────────┐
+│    Supabase     │
+│  - PostgreSQL   │
+│  - Auth         │
+│  - Realtime     │
+│  - Storage      │
+└─────────────────┘
 ```
 
-## Screens
+## 📦 Dependencies
 
-| Route | Description |
-|---|---|
-| `/` | Redirect → `/home` or `/auth/login` |
-| `/auth/login` | Email + password login |
-| `/auth/register` | Account creation |
-| `/home` | My journeys list |
-| `/explore` | Discover public journeys |
-| `/profile` | User profile, stats, logout |
-| `/journey/create` | Create a new journey with stops |
-| `/journey/:id` | Journey detail with stop list |
-| `/journey/:id/edit` | Edit journey (owner only) |
-| `/session/active` | Active solo session — check in at stops |
-| `/session/group` | Multiplayer group session (WebSocket) |
-| `/session/spontaneous` | Ad-hoc session without a plan |
+### Core
+- `expo` ~54.0.33
+- `react` 19.1.0
+- `react-native` 0.81.5
 
-## API Configuration
+### Supabase
+- `@supabase/supabase-js` ^2.x
+- `react-native-url-polyfill` (for deep links)
 
-The app connects to a backend at the URL defined by `API_BASE_URL` (defaults to `http://192.168.1.200:3000`).
+### State Management
+- `zustand` ^5.0.12
 
-For production builds, set `API_BASE_URL` at build time to your server's public URL.
+### Navigation
+- `expo-router` ~6.0.23
+- `@react-navigation/*`
+
+### Storage
+- `@react-native-async-storage/async-storage` (for Supabase session persistence)
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create `.env` in the frontend directory:
 
 ```bash
-API_BASE_URL=https://your-server.com npx expo prebuild --platform android
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+EXPO_PUBLIC_SUPABASE_STORAGE_BUCKET=journey-uploads
 ```
 
-## Setup
+### Supabase Setup
 
+1. **Run migration** (once):
 ```bash
-cd frontend
-npm install
-npx expo start
+cd /home/node/.openclaw/workspace-journeytogether-2.0
+# Apply supabase_migration.sql in Supabase SQL Editor
 ```
 
-## E2E Tests
+2. **Create storage bucket**:
+   - Name: `journey-uploads`
+   - Public: ✅ true
+   - File size: 10MB limit
+   - Allowed MIME: `image/*,audio/*`
 
-Tests use Playwright with the `chromium` browser.
+3. **Enable Email Auth** in Supabase Dashboard:
+   - Authentication → Providers → Email
+   - Enable "Enable Email Signup"
+   - Disable email confirmation for development (optional)
 
-> **Note:** Chromium requires system libs (`libnspr4.so`, etc.) not available in Docker/Unraid environments. Run on a Linux host or Mac.
+## 📁 Project Structure
+
+```
+frontend/
+├── api/
+│   └── supabaseClient.ts    # Supabase API functions
+├── app/
+│   ├── _layout.tsx          # Root layout (initialize Supabase)
+│   ├── index.tsx            # Home screen
+│   ├── auth/
+│   │   ├── login.tsx
+│   │   └── register.tsx
+│   └── (tabs)/
+│       ├── index.tsx        # Journey discovery
+│       ├── journey/
+│       │   └── [id].tsx     # Journey detail
+│       ├── session/
+│       │   └── active.tsx   # Active session
+│       └── profile.tsx      # User profile
+├── components/
+│   ├── JourneyCard.tsx
+│   ├── StopCard.tsx
+│   └── ...
+├── lib/
+│   └── supabase.ts          # Supabase client setup
+├── stores/
+│   ├── authStore.ts         # Auth state (zustand)
+│   ├── journeyStore.ts      # Journey state
+│   └── sessionStore.ts      # Session state
+├── types/
+│   └── database.ts          # Supabase types
+└── hooks/
+    ├── useAuth.ts           # Auth hook
+    ├── useJourney.ts        # Journey hook
+    └── useSession.ts        # Session hook
+```
+
+## 🔐 Authentication Flow
+
+```typescript
+import { signUp, signIn, signOut, getSession } from '@/api/supabaseClient';
+
+// Register
+const { user, session } = await signUp(email, password, displayName);
+
+// Login
+const { user, session } = await signIn(email, password);
+
+// Get current session
+const session = await getSession();
+
+// Logout
+await signOut();
+```
+
+## 📊 Database Usage
+
+```typescript
+import { 
+  getJourneys, 
+  getJourneyById, 
+  createJourney,
+  getProfile 
+} from '@/api/supabaseClient';
+
+// Get all public journeys
+const journeys = await getJourneys({ is_public: true });
+
+// Get journey with stops
+const journey = await getJourneyById(journeyId);
+
+// Create journey
+const newJourney = await createJourney({
+  title: 'My Journey',
+  description: 'Amazing adventure',
+  tags: ['hiking', 'nature'],
+  stops: [
+    {
+      title: 'Start Point',
+      location: { lat: 55.6761, lng: 12.5683 },
+    }
+  ]
+});
+```
+
+## 🎨 Realtime Subscriptions
+
+```typescript
+import { getSupabaseClient } from '@/lib/supabase';
+
+// Subscribe to session updates
+const channel = getSupabaseClient()
+  .channel('session-updates')
+  .on(
+    'postgres_changes',
+    {
+      schema: 'public',
+      table: 'session_members',
+      filter: `session_id=eq.${sessionId}`,
+    },
+    (payload) => {
+      console.log('Session member changed:', payload);
+    }
+  )
+  .subscribe();
+
+// Cleanup
+return () => {
+  channel.unsubscribe();
+};
+```
+
+## 📸 File Uploads
+
+```typescript
+import { uploadAvatar, uploadSessionPhoto } from '@/api/supabaseClient';
+
+// Upload avatar
+const { url } = await uploadAvatar(imageUri);
+
+// Upload session photo
+const photo = await uploadSessionPhoto(sessionId, photoUri, stopId);
+```
+
+## 🧪 Testing
 
 ```bash
-cd frontend
+# Run E2E tests
 npm run test:e2e
+
+# Run with visible browser
+npm run test:e2e:headed
+
+# Run in Docker (isolated)
+npm run test:e2e:docker
 ```
 
-## Build
-
-### Android (EAS)
+## 🚀 Development
 
 ```bash
-eas build --platform android --profile preview
-eas credentials  # configure signing
+# Install dependencies
+npm install
+
+# Start Expo dev server
+npm run dev:web
+
+# Start on device
+npm run android
+npm run ios
 ```
 
-### Local Android (Expo prebuild)
+## 📝 Migration from Backend
 
-```bash
-npx expo prebuild --platform android
-cd android && ./gradlew assembleRelease
-```
+The previous backend (`/backend`) has been removed. All functionality is now handled by Supabase:
 
-## Backend
+| Old Backend Route | New Supabase Function |
+|-------------------|----------------------|
+| `POST /auth/register` | `signUp()` |
+| `POST /auth/login` | `signIn()` |
+| `GET /journeys` | `getJourneys()` |
+| `GET /journeys/:id` | `getJourneyById()` |
+| `POST /journeys` | `createJourney()` |
+| `POST /sessions/solo/start` | `startSoloSession()` |
+| `POST /journeys/:id/reactions` | `addJourneyReaction()` |
 
-The companion backend is in `../backend/` (Express + better-sqlite3 + JWT). See `../PLAN-BACKEND.md` for full API docs.
+## 🔗 Links
 
-### Key endpoints
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| POST | /auth/register | — | Create account |
-| POST | /auth/login | — | Login |
-| GET | /auth/me | JWT | Current user |
-| GET | /journeys | JWT | List user's journeys |
-| POST | /journeys | JWT | Create journey |
-| GET | /journeys/:id | JWT | Journey detail |
-| PATCH | /journeys/:id | JWT | Update journey |
-| DELETE | /journeys/:id | JWT | Delete journey |
-| POST | /sessions/solo/start | JWT | Start solo session |
-| POST | /sessions/solo/:id/stops/:stopId/complete | JWT | Check in at stop |
-| POST | /sessions/solo/:id/end | JWT | End solo session |
+- **Supabase Dashboard:** https://supabase.com/dashboard/project/nligtfvaxrwtrhdvwuug
+- **Docs:** https://supabase.com/docs
+- **Expo Docs:** https://docs.expo.dev
