@@ -119,5 +119,3 @@ export async function initializeSupabase(): Promise<SupabaseClient<Database>> {
   
   return client;
 }
-
-export { storage };
