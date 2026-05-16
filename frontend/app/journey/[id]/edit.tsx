@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { StopEditor, type StopInput } from '@/components/StopEditor';
 import { CoverImagePicker } from '@/components/CoverImagePicker';
-import { apiClient } from '@/api/client';
+import { updateJourney, updateJourneyStops } from '@/api/supabaseClient';
 import { Colors } from '@/constants/theme';
 import type { Stop } from '@/types/journey';
 

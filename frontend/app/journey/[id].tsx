@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useJourneyStore } from '@/stores/journeyStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useGroupSessionStore } from '@/stores/groupSessionStore';
-import { apiClient } from '@/api/client';
+import { getJourneyById, updateJourney, deleteJourney, forkJourney, addJourneyReaction, getJourneyReactions } from '@/api/supabaseClient';
 import type { Stop, Reaction, ReactionEmoji } from '@/types/journey';
 import { Colors } from '@/constants/theme';
 import { ReactionBar } from '@/components/ReactionBar';
