@@ -17,15 +17,15 @@ const PROTECTED_ROUTES = ['(tabs)', 'home'];
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const { user, isInitialized, loadToken } = useAuthStore();
+  const { user, isInitialized, loadUser } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
     if (!isInitialized) {
-      loadToken();
+      loadUser();
     }
-  }, [isInitialized, loadToken]);
+  }, [isInitialized, loadUser]);
 
   // Handle navigation based on auth state
   useEffect(() => {
